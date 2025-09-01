@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Link } from "react-router-dom";
 import { Users, Heart, Globe, Utensils, Target, Clock, MapPin, Star, ChevronLeft, ChevronRight, Play, Pause } from "lucide-react";
 
 const stats = [
@@ -13,39 +14,39 @@ const team = [
   { 
     name: "Gourav Dubey", 
     role: "Founder & Visionary", 
-    img: "https://i.pravatar.cc/300?img=1",
+    img: "6.jpg",
     bio: "Former restaurant owner who saw food waste firsthand and decided to make a change.",
     social: { linkedin: "#", twitter: "#" }
   },
   { 
-    name: "Anjali Mehta", 
+    name: "Manish Tiwari", 
     role: "Operations Director", 
-    img: "https://i.pravatar.cc/300?img=2",
+    img: "",
     bio: "Logistics expert with 10+ years in supply chain management for humanitarian organizations.",
     social: { linkedin: "#", twitter: "#" }
   },
   { 
-    name: "Rahul Sharma", 
+    name: "Mayank Tiwari", 
     role: "Technology Lead", 
-    img: "https://i.pravatar.cc/300?img=3",
+    img: "",
     bio: "Software engineer passionate about using technology to solve real-world problems.",
     social: { linkedin: "#", twitter: "#" }
   },
   { 
-    name: "Priya Patel", 
+    name: "Rohit Thakur", 
     role: "Community Manager", 
-    img: "https://i.pravatar.cc/300?img=4",
+    img: "",
     bio: "Social work graduate who builds and nurtures our volunteer network across regions.",
     social: { linkedin: "#", twitter: "#" }
   },
 ];
 
 const timeline = [
-  { year: "2020", event: "Concept Born", description: "Idea sparked after witnessing food waste at local events" },
-  { year: "2021", event: "Pilot Launch", description: "First successful food sharing in Mumbai with 5 NGO partners" },
-  { year: "2022", event: "Tech Platform", description: "Mobile app launched to scale operations" },
-  { year: "2023", event: "National Expansion", description: "Expanded to 15 cities across India" },
-  { year: "2024", event: "Global Reach", description: "Went international with operations in 6 countries" },
+  { year: "2025", event: "Concept Born", description: "Idea sparked after witnessing food waste at local events" },
+  { year: "2025", event: "Pilot Launch", description: "First successful food sharing in Mumbai with 5 NGO partners" },
+  { year: "2025", event: "Tech Platform", description: "Website launched to scale operations" },
+  { year: "2025", event: "National Expansion", description: "Expanded to 15 cities across India" },
+  { year: "2025", event: "Global Reach", description: "Went international with operations in 6 countries" },
 ];
 
 const values = [
@@ -128,43 +129,40 @@ const AboutUs = () => {
         </div>
         
         <div className="relative z-10 max-w-4xl mx-auto px-6">
-          <motion.h1
-            className="text-5xl md:text-6xl font-extrabold mb-6 text-gray-900"
-            initial={{ opacity: 0, y: -30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            About <span className="text-green-600">Food Share Network</span>
-          </motion.h1>
-          <motion.p
-            className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3, duration: 0.8 }}
-          >
-            We're building a global movement to eliminate food waste and hunger by connecting surplus food with people in need through technology and community.
-          </motion.p>
-          
-          <motion.div 
-            className="mt-10 flex flex-col sm:flex-row gap-4 justify-center"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6, duration: 0.6 }}
-          >
-            <a
-              href="/get-started"
-              className="bg-green-600 text-white font-semibold px-8 py-4 rounded-full shadow-md hover:bg-green-700 transition flex items-center justify-center"
-            >
-              Join Our Mission
-            </a>
-            <a
-              href="/impact"
-              className="border-2 border-green-600 text-green-700 font-semibold px-8 py-4 rounded-full hover:bg-green-50 transition flex items-center justify-center"
-            >
-              See Our Impact
-            </a>
-          </motion.div>
-        </div>
+  <motion.h1
+    className="text-5xl md:text-6xl font-extrabold mb-6 text-gray-900"
+    initial={{ opacity: 0, y: -30 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.8 }}
+  >
+    About <span className="text-green-600">Food Share Network</span>
+  </motion.h1>
+
+  <motion.p
+    className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed"
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    transition={{ delay: 0.3, duration: 0.8 }}
+  >
+    We're building a global movement to eliminate food waste and hunger by connecting surplus food with people in need through technology and community.
+  </motion.p>
+
+  <motion.div 
+    className="mt-10 flex flex-col sm:flex-row gap-4 justify-center"
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ delay: 0.6, duration: 0.6 }}
+  >
+    <Link
+      to="/register"
+      className="bg-green-600 text-white font-semibold px-8 py-4 rounded-full shadow-md hover:bg-green-700 transition flex items-center justify-center"
+    >
+      Join Our Mission
+    </Link>
+
+    
+  </motion.div>
+</div>
       </section>
 
       {/* Mission & Vision */}
