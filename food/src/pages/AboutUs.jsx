@@ -489,7 +489,7 @@ const AboutUs = () => {
       </section>
 
       {/* Call To Action */}
-      <section className="py-24 text-center bg-gradient-to-r from-green-600 to-green-700 text-white relative overflow-hidden">
+      <section className="py-18 text-center bg-gradient-to-r from-green-600 to-green-700 text-white relative overflow-hidden">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 left-0 w-full h-full pattern-food pattern-green-800 pattern-size-16 pattern-opacity-20"></div>
         </div>
@@ -505,7 +505,7 @@ const AboutUs = () => {
             Ready to Make a Difference?
           </motion.h2>
           <motion.p
-            className="text-xl mb-10 max-w-2xl mx-auto"
+            className="text-xl mb-10 max-w-3xl mx-auto"
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             transition={{ delay: 0.3, duration: 0.6 }}
@@ -514,32 +514,7 @@ const AboutUs = () => {
             Join thousands of individuals and organizations fighting food waste and hunger in communities around the world.
           </motion.p>
           
-          <motion.div 
-            className="flex flex-col sm:flex-row gap-4 justify-center"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6, duration: 0.6 }}
-            viewport={{ once: true }}
-          >
-            <a
-              href="/donate"
-              className="bg-white text-green-700 font-semibold px-8 py-4 rounded-full shadow-md hover:bg-gray-100 transition flex items-center justify-center"
-            >
-              Donate Food
-            </a>
-            <a
-              href="/volunteer"
-              className="bg-transparent border-2 border-white text-white font-semibold px-8 py-4 rounded-full hover:bg-white/10 transition flex items-center justify-center"
-            >
-              Become a Volunteer
-            </a>
-            <a
-              href="/partner"
-              className="bg-transparent border-2 border-white text-white font-semibold px-8 py-4 rounded-full hover:bg-white/10 transition flex items-center justify-center"
-            >
-              Partner With Us
-            </a>
-          </motion.div>
+          
         </div>
       </section>
       
