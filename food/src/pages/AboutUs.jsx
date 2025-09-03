@@ -36,7 +36,7 @@ const team = [
     name: "Rohit Thakur", 
     role: "Community Manager", 
     img: "",
-    bio: "Social work graduate who builds and nurtures our volunteer network across regions.",
+    bio: "Software Engineer and Social Worker.",
     social: { linkedin: "#", twitter: "#" }
   },
 ];
