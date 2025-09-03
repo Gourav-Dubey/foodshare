@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import axios from "axios";
+import API from "../utils/api";
 import { FaUtensils, FaUser, FaEnvelope, FaLock, FaEye, FaEyeSlash, FaHandHoldingHeart, FaUsers, FaCheck } from "react-icons/fa";
 
 const RegisterPage = () => {
@@ -78,7 +78,7 @@ const RegisterPage = () => {
 
     try {
       setLoading(true);
-      const res = await axios.post("http://localhost:5000/api/auth/register", {
+      const res = await API.post("/auth/register", {
         role: formData.role,
         name: formData.name,
         email: formData.email,
