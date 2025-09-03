@@ -6,7 +6,7 @@ const API = axios.create({
   baseURL:
     window.location.hostname === "localhost"
       ? "http://localhost:5000/api"  // 👈 Local backend
-      : "https://foodsharebackend.onrender.com", // 👈 Render backend
+      : "https://foodsharebackend.onrender.com/api", // 👈 Render backend
   withCredentials: true,
 });
 
