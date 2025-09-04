@@ -1,123 +1,135 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Bell, ClipboardList, Truck, PieChart } from "lucide-react";
-import { Card, CardContent } from "../components/ui/Card";
-import { Button } from "../components/ui/Button";
+import { CheckCircle, XCircle } from "lucide-react";
 
 const NgoDashboard = () => {
-  const [requests, setRequests] = useState([
-    { id: 1, donor: "Gourav", item: "Rice - 5kg", status: "Pending" },
-    { id: 2, donor: "Ramesh", item: "Vegetables - 10kg", status: "Pickup Scheduled" },
+  const [pendingDonations, setPendingDonations] = useState([
+    {
+      id: 1,
+      foodName: "Cooked Rice",
+      quantity: "5 kg",
+      location: "Delhi, India",
+      expiry: "2 hours",
+      photo: "https://source.unsplash.com/400x300/?rice",
+    },
+    {
+      id: 2,
+      foodName: "Bread Loaves",
+      quantity: "20 pieces",
+      location: "Mumbai, India",
+      expiry: "6 hours",
+      photo: "https://source.unsplash.com/400x300/?bread",
+    },
   ]);
 
-  const handleUpdateStatus = (id, newStatus) => {
-    setRequests((prev) =>
-      prev.map((req) =>
-        req.id === id ? { ...req, status: newStatus } : req
-      )
-    );
+  const [acceptedDonations, setAcceptedDonations] = useState([]);
+
+  const handleAccept = (donation) => {
+    setPendingDonations(pendingDonations.filter((d) => d.id !== donation.id));
+    setAcceptedDonations([...acceptedDonations, donation]);
+  };
+
+  const handleCancel = (donation) => {
+    setAcceptedDonations(acceptedDonations.filter((d) => d.id !== donation.id));
+    setPendingDonations([...pendingDonations, donation]);
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      {/* Top Heading */}
+    <div className="min-h-screen mt-12 bg-gradient-to-br from-purple-100 via-pink-50 to-blue-100 p-6">
       <motion.h1
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-3xl font-bold mb-6 text-gray-800"
+        transition={{ duration: 0.6 }}
+        className="text-3xl md:text-4xl font-extrabold text-center text-purple-700 mb-8"
       >
-        NGO Dashboard
+        🌟 Welcome, NGO Member 🌟
       </motion.h1>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <Card className="shadow-lg">
-          <CardContent className="flex items-center gap-4 p-6">
-            <ClipboardList className="w-10 h-10 text-blue-600" />
-            <div>
-              <p className="text-sm text-gray-500">Active Requests</p>
-              <p className="text-xl font-bold">{requests.length}</p>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Pending Donations */}
+      <section className="mb-10">
+        <h2 className="text-2xl font-bold text-gray-800 mb-4">Pending Donations</h2>
+        {pendingDonations.length === 0 ? (
+          <p className="text-gray-600">No pending donations right now.</p>
+        ) : (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {pendingDonations.map((donation) => (
+              <motion.div
+                key={donation.id}
+                whileHover={{ scale: 1.02 }}
+                className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200 flex flex-col"
+              >
+                <img
+                  src={donation.photo}
+                  alt={donation.foodName}
+                  className="w-full h-40 object-cover"
+                />
+                <div className="p-4 flex flex-col flex-1">
+                  <h3 className="text-lg font-semibold text-gray-800">
+                    {donation.foodName}
+                  </h3>
+                  <p className="text-sm text-gray-600">Quantity: {donation.quantity}</p>
+                  <p className="text-sm text-gray-600">Location: {donation.location}</p>
+                  <p className="text-sm text-gray-600">Expiry: {donation.expiry}</p>
+                  <span className="mt-2 inline-block px-3 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800 w-max">
+                    Pending
+                  </span>
+                  <button
+                    onClick={() => handleAccept(donation)}
+                    className="mt-4 flex items-center justify-center gap-2 bg-gradient-to-r from-green-400 to-green-600 text-white py-2 px-4 rounded-xl hover:opacity-90 transition"
+                  >
+                    <CheckCircle className="w-5 h-5" /> Accept
+                  </button>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </section>
 
-        <Card className="shadow-lg">
-          <CardContent className="flex items-center gap-4 p-6">
-            <Truck className="w-10 h-10 text-green-600" />
-            <div>
-              <p className="text-sm text-gray-500">Scheduled Pickups</p>
-              <p className="text-xl font-bold">
-                {requests.filter((r) => r.status.includes("Pickup")).length}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-lg">
-          <CardContent className="flex items-center gap-4 p-6">
-            <PieChart className="w-10 h-10 text-purple-600" />
-            <div>
-              <p className="text-sm text-gray-500">Completed Deliveries</p>
-              <p className="text-xl font-bold">12</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Requests List */}
-      <div className="bg-white rounded-xl shadow-md p-6">
-        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-          <Bell className="w-6 h-6 text-red-500" />
-          Food Requests
-        </h2>
-
-        {requests.map((req) => (
-          <motion.div
-            key={req.id}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex justify-between items-center p-4 border-b last:border-0"
-          >
-            <div>
-              <p className="font-medium">{req.item}</p>
-              <p className="text-sm text-gray-500">Donor: {req.donor}</p>
-              <p className="text-sm">
-                Status:{" "}
-                <span
-                  className={`font-medium ${
-                    req.status === "Pending"
-                      ? "text-yellow-600"
-                      : "text-green-600"
-                  }`}
-                >
-                  {req.status}
-                </span>
-              </p>
-            </div>
-            <div className="flex gap-2">
-              {req.status === "Pending" && (
-                <Button
-                  size="sm"
-                  onClick={() => handleUpdateStatus(req.id, "Pickup Scheduled")}
-                >
-                  Schedule Pickup
-                </Button>
-              )}
-              {req.status === "Pickup Scheduled" && (
-                <Button
-                  size="sm"
-                  className="bg-green-600 hover:bg-green-700"
-                  onClick={() => handleUpdateStatus(req.id, "Completed")}
-                >
-                  Mark Completed
-                </Button>
-              )}
-            </div>
-          </motion.div>
-        ))}
-      </div>
+      {/* Accepted Donations */}
+      <section>
+        <h2 className="text-2xl font-bold text-gray-800 mb-4">Accepted Donations</h2>
+        {acceptedDonations.length === 0 ? (
+          <p className="text-gray-600">No accepted donations yet.</p>
+        ) : (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {acceptedDonations.map((donation) => (
+              <motion.div
+                key={donation.id}
+                whileHover={{ scale: 1.02 }}
+                className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200 flex flex-col"
+              >
+                <img
+                  src={donation.photo}
+                  alt={donation.foodName}
+                  className="w-full h-40 object-cover"
+                />
+                <div className="p-4 flex flex-col flex-1">
+                  <h3 className="text-lg font-semibold text-gray-800">
+                    {donation.foodName}
+                  </h3>
+                  <p className="text-sm text-gray-600">Quantity: {donation.quantity}</p>
+                  <p className="text-sm text-gray-600">Location: {donation.location}</p>
+                  <p className="text-sm text-gray-600">Expiry: {donation.expiry}</p>
+                  <span className="mt-2 inline-block px-3 py-1 text-xs rounded-full bg-green-100 text-green-800 w-max">
+                    Accepted
+                  </span>
+                  <button
+                    onClick={() => handleCancel(donation)}
+                    className="mt-4 flex items-center justify-center gap-2 bg-gradient-to-r from-red-400 to-red-600 text-white py-2 px-4 rounded-xl hover:opacity-90 transition"
+                  >
+                    <XCircle className="w-5 h-5" /> Cancel
+                  </button>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
 };
 
 export default NgoDashboard;
+
+
