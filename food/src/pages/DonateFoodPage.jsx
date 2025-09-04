@@ -1,6 +1,19 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Upload, Gift } from "lucide-react";
+import axios from "axios";
+import { io } from "socket.io-client";
+
+const API_URL =
+  window.location.hostname === "localhost"
+    ? "http://localhost:5000/api"
+    : "https://foodsharebackend.onrender.com/api";
+
+const socket = io(
+  window.location.hostname === "localhost"
+    ? "http://localhost:5000"
+    : "https://foodsharebackend.onrender.com"
+);
 
 const DonorDashboard = ({ donorName = "Donor" }) => {
   const [donations, setDonations] = useState([]);
@@ -8,10 +21,33 @@ const DonorDashboard = ({ donorName = "Donor" }) => {
     foodName: "",
     quantity: "",
     location: "",
-    expiryTime: "",
+    expiry: "", // ✅ backend ke field ke saath match
     photo: null,
   });
   const [preview, setPreview] = useState(null);
+
+  useEffect(() => {
+    socket.on("donationAccepted", (updatedDonation) => {
+      setDonations((prev) =>
+        prev.map((donation) =>
+          donation._id === updatedDonation._id ? updatedDonation : donation
+        )
+      );
+    });
+
+    socket.on("donationCancelled", (updatedDonation) => {
+      setDonations((prev) =>
+        prev.map((donation) =>
+          donation._id === updatedDonation._id ? updatedDonation : donation
+        )
+      );
+    });
+
+    return () => {
+      socket.off("donationAccepted");
+      socket.off("donationCancelled");
+    };
+  }, []);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -25,35 +61,60 @@ const DonorDashboard = ({ donorName = "Donor" }) => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.foodName || !formData.quantity || !formData.location || !formData.expiryTime || !formData.photo) {
+    if (
+      !formData.foodName ||
+      !formData.quantity ||
+      !formData.location ||
+      !formData.expiry ||
+      !formData.photo
+    ) {
       alert("Please fill all fields including photo!");
       return;
     }
 
-    const newDonation = {
-      ...formData,
-      photo: preview,
-      status: "Pending NGO Approval",
-      id: Date.now(),
-    };
+    try {
+      const data = new FormData();
+      data.append("foodName", formData.foodName);
+      data.append("quantity", formData.quantity);
+      data.append("location", formData.location);
+      data.append("expiry", formData.expiry);
+      data.append("photo", formData.photo);
 
-    setDonations([newDonation, ...donations]);
+      const res = await axios.post(`${API_URL}/donation`, data, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
 
-    setFormData({
-      foodName: "",
-      quantity: "",
-      location: "",
-      expiryTime: "",
-      photo: null,
-    });
-    setPreview(null);
+      console.log("✅ Donation submitted:", res.data);
+
+      const newDonation = res.data.data; // ✅ backend se `data` ke andar aata hai
+      setDonations([newDonation, ...donations]);
+
+      setFormData({
+        foodName: "",
+        quantity: "",
+        location: "",
+        expiry: "",
+        photo: null,
+      });
+      setPreview(null);
+    } catch (err) {
+      console.error(
+        "❌ Error submitting donation:",
+        err.response?.data || err.message || err
+      );
+    }
+  };
+
+  // ✅ Status label format
+  const getStatusLabel = (status) => {
+    if (status === "accepted") return "Accepted by NGO ✅";
+    return "Pending NGO Approval";
   };
 
   return (
-    <div className="min-h-screen mt-12  bg-gradient-to-br from-green-100 via-white to-green-50 p-4 sm:p-8">
-      {/* Hero Section */}
+    <div className="min-h-screen mt-12 bg-gradient-to-br from-green-100 via-white to-green-50 p-4 sm:p-8">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -71,9 +132,8 @@ const DonorDashboard = ({ donorName = "Donor" }) => {
         </p>
       </motion.div>
 
-      {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-10">
-        {/* Donation Form */}
+        {/* Form */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -110,18 +170,19 @@ const DonorDashboard = ({ donorName = "Donor" }) => {
             />
             <input
               type="text"
-              name="expiryTime"
+              name="expiry"
               placeholder="Expiry Time (e.g., 2 hours)"
-              value={formData.expiryTime}
+              value={formData.expiry}
               onChange={handleChange}
               className="w-full border rounded-xl p-2 sm:p-3 focus:ring-2 focus:ring-green-400 outline-none text-sm sm:text-base"
             />
 
-            {/* Image Upload */}
             <div className="border-2 border-dashed rounded-xl p-4 sm:p-6 flex flex-col items-center justify-center hover:bg-green-50 transition">
               <label className="cursor-pointer flex flex-col items-center">
                 <Upload className="w-6 h-6 sm:w-8 sm:h-8 text-green-500 mb-2" />
-                <span className="text-gray-600 text-xs sm:text-sm">Upload Food Photo</span>
+                <span className="text-gray-600 text-xs sm:text-sm">
+                  Upload Food Photo
+                </span>
                 <input
                   type="file"
                   accept="image/*"
@@ -149,25 +210,27 @@ const DonorDashboard = ({ donorName = "Donor" }) => {
           </form>
         </motion.div>
 
-        {/* Submitted Donations */}
+        {/* List */}
         <div>
           <h2 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 text-gray-800">
             Your Submissions 📋
           </h2>
           {donations.length === 0 ? (
-            <p className="text-gray-500 text-sm sm:text-base">No donations submitted yet.</p>
+            <p className="text-gray-500 text-sm sm:text-base">
+              No donations submitted yet.
+            </p>
           ) : (
             <div className="grid gap-4 sm:gap-6">
               {donations.map((donation) => (
                 <motion.div
-                  key={donation.id}
+                  key={donation._id || donation.id}
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5 }}
                   className="bg-white rounded-2xl shadow-md overflow-hidden border border-green-200"
                 >
                   <img
-                    src={donation.photo}
+                    src={donation.photo || "https://source.unsplash.com/400x300/?food"}
                     alt={donation.foodName}
                     className="w-full h-32 sm:h-40 object-cover"
                   />
@@ -182,16 +245,16 @@ const DonorDashboard = ({ donorName = "Donor" }) => {
                       📍 Location: {donation.location}
                     </p>
                     <p className="text-xs sm:text-sm text-gray-600">
-                      ⏰ Expiry: {donation.expiryTime}
+                      ⏰ Expiry: {donation.expiry}
                     </p>
                     <span
                       className={`inline-block mt-2 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${
-                        donation.status === "Pending NGO Approval"
-                          ? "bg-yellow-100 text-yellow-700"
-                          : "bg-green-100 text-green-700"
+                        donation.status === "accepted"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-yellow-100 text-yellow-700"
                       }`}
                     >
-                      {donation.status}
+                      {getStatusLabel(donation.status)}
                     </span>
                   </div>
                 </motion.div>

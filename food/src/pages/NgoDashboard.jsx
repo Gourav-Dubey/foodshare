@@ -1,37 +1,85 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { CheckCircle, XCircle } from "lucide-react";
+import axios from "axios";
+import { io } from "socket.io-client";
+
+const API_URL =
+  window.location.hostname === "localhost"
+    ? "http://localhost:5000/api"
+    : "https://foodsharebackend.onrender.com/api";
+
+const socket = io(
+  window.location.hostname === "localhost"
+    ? "http://localhost:5000"
+    : "https://foodsharebackend.onrender.com"
+);
 
 const NgoDashboard = () => {
-  const [pendingDonations, setPendingDonations] = useState([
-    {
-      id: 1,
-      foodName: "Cooked Rice",
-      quantity: "5 kg",
-      location: "Delhi, India",
-      expiry: "2 hours",
-      photo: "https://source.unsplash.com/400x300/?rice",
-    },
-    {
-      id: 2,
-      foodName: "Bread Loaves",
-      quantity: "20 pieces",
-      location: "Mumbai, India",
-      expiry: "6 hours",
-      photo: "https://source.unsplash.com/400x300/?bread",
-    },
-  ]);
-
+  const [pendingDonations, setPendingDonations] = useState([]);
   const [acceptedDonations, setAcceptedDonations] = useState([]);
 
-  const handleAccept = (donation) => {
-    setPendingDonations(pendingDonations.filter((d) => d.id !== donation.id));
-    setAcceptedDonations([...acceptedDonations, donation]);
+  useEffect(() => {
+    const fetchDonations = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/donation/pending`);
+
+        console.log("📥 Pending donations response:", res.data);
+
+        if (Array.isArray(res.data.data)) {
+          setPendingDonations(res.data.data);
+        } else {
+          console.error("❌ API did not return array:", res.data);
+          setPendingDonations([]);
+        }
+      } catch (err) {
+        console.error("❌ Error fetching donations:", err);
+        setPendingDonations([]);
+      }
+    };
+
+    fetchDonations();
+
+    // ✅ Real-time updates
+    socket.on("newDonation", (donation) => {
+      setPendingDonations((prev) => [...prev, donation]);
+    });
+
+    socket.on("donationAccepted", (updated) => {
+      setPendingDonations((prev) => prev.filter((d) => d._id !== updated._id));
+      setAcceptedDonations((prev) => [...prev, updated]);
+    });
+
+    socket.on("donationCancelled", (updated) => {
+      setAcceptedDonations((prev) => prev.filter((d) => d._id !== updated._id));
+      setPendingDonations((prev) => [...prev, updated]);
+    });
+
+    return () => {
+      socket.off("newDonation");
+      socket.off("donationAccepted");
+      socket.off("donationCancelled");
+    };
+  }, []);
+
+  const handleAccept = async (donation) => {
+    try {
+      const res = await axios.put(`${API_URL}/donation/accept/${donation._id}`);
+      setPendingDonations((prev) => prev.filter((d) => d._id !== donation._id));
+      setAcceptedDonations((prev) => [...prev, res.data.data]);
+    } catch (err) {
+      console.error("❌ Error accepting donation:", err);
+    }
   };
 
-  const handleCancel = (donation) => {
-    setAcceptedDonations(acceptedDonations.filter((d) => d.id !== donation.id));
-    setPendingDonations([...pendingDonations, donation]);
+  const handleCancel = async (donation) => {
+    try {
+      const res = await axios.put(`${API_URL}/donation/cancel/${donation._id}`);
+      setAcceptedDonations((prev) => prev.filter((d) => d._id !== donation._id));
+      setPendingDonations((prev) => [...prev, res.data.data]);
+    } catch (err) {
+      console.error("❌ Error cancelling donation:", err);
+    }
   };
 
   return (
@@ -54,22 +102,20 @@ const NgoDashboard = () => {
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {pendingDonations.map((donation) => (
               <motion.div
-                key={donation.id}
+                key={donation._id}
                 whileHover={{ scale: 1.02 }}
                 className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200 flex flex-col"
               >
                 <img
-                  src={donation.photo}
+                  src={donation.photo || "https://source.unsplash.com/400x300/?food"}
                   alt={donation.foodName}
                   className="w-full h-40 object-cover"
                 />
                 <div className="p-4 flex flex-col flex-1">
-                  <h3 className="text-lg font-semibold text-gray-800">
-                    {donation.foodName}
-                  </h3>
+                  <h3 className="text-lg font-semibold text-gray-800">{donation.foodName}</h3>
                   <p className="text-sm text-gray-600">Quantity: {donation.quantity}</p>
                   <p className="text-sm text-gray-600">Location: {donation.location}</p>
-                  <p className="text-sm text-gray-600">Expiry: {donation.expiry}</p>
+                  <p className="text-sm text-gray-600">Expiry: {donation.expiry || "N/A"}</p>
                   <span className="mt-2 inline-block px-3 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800 w-max">
                     Pending
                   </span>
@@ -95,22 +141,20 @@ const NgoDashboard = () => {
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {acceptedDonations.map((donation) => (
               <motion.div
-                key={donation.id}
+                key={donation._id}
                 whileHover={{ scale: 1.02 }}
                 className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200 flex flex-col"
               >
                 <img
-                  src={donation.photo}
+                  src={donation.photo || "https://source.unsplash.com/400x300/?food"}
                   alt={donation.foodName}
                   className="w-full h-40 object-cover"
                 />
                 <div className="p-4 flex flex-col flex-1">
-                  <h3 className="text-lg font-semibold text-gray-800">
-                    {donation.foodName}
-                  </h3>
+                  <h3 className="text-lg font-semibold text-gray-800">{donation.foodName}</h3>
                   <p className="text-sm text-gray-600">Quantity: {donation.quantity}</p>
                   <p className="text-sm text-gray-600">Location: {donation.location}</p>
-                  <p className="text-sm text-gray-600">Expiry: {donation.expiry}</p>
+                  <p className="text-sm text-gray-600">Expiry: {donation.expiry || "N/A"}</p>
                   <span className="mt-2 inline-block px-3 py-1 text-xs rounded-full bg-green-100 text-green-800 w-max">
                     Accepted
                   </span>
@@ -131,5 +175,3 @@ const NgoDashboard = () => {
 };
 
 export default NgoDashboard;
-
-
