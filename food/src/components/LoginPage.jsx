@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useAuth } from "../context/AuthContext"; 
+import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import API from "../utils/api";
 
@@ -19,16 +19,20 @@ const LoginPage = () => {
     try {
       const res = await API.post("/auth/login", { email, password });
 
-      // response se token + role aayega
+      // ✅ response se data nikalna
       const { token, user } = res.data;
+      const role = user.role;
 
-      // context me save karo
-      login({ token, ...user });
+      // ✅ token ko localStorage me save karna
+      localStorage.setItem("token", token);
 
-      // role ke hisab se navigate karo
-      if (user.role === "ngo") {
+      // ✅ context me save karna
+      login(user, role, token);
+
+      // ✅ role ke hisab se redirect
+      if (role === "ngo") {
         navigate("/ngo-dashboard");
-      } else if (user.role === "donor") {
+      } else if (role === "donor") {
         navigate("/donor-dashboard");
       } else {
         navigate("/");

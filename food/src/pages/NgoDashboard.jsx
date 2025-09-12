@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { CheckCircle, XCircle } from "lucide-react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { io } from "socket.io-client";
+import { CheckCircle, XCircle } from "lucide-react";
 
 const API_URL =
   window.location.hostname === "localhost"
@@ -22,37 +21,49 @@ const NgoDashboard = () => {
   useEffect(() => {
     const fetchDonations = async () => {
       try {
-        const res = await axios.get(`${API_URL}/donation/pending`);
+        const token = localStorage.getItem("token");
+        const pendingRes = await axios.get(`${API_URL}/donation/pending`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const acceptedRes = await axios.get(`${API_URL}/donation/accepted`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
-        console.log("📥 Pending donations response:", res.data);
-
-        if (Array.isArray(res.data.data)) {
-          setPendingDonations(res.data.data);
-        } else {
-          console.error("❌ API did not return array:", res.data);
-          setPendingDonations([]);
-        }
+        // 🔥 Reverse so that recent donations are on top
+        setPendingDonations((pendingRes.data.data || []).reverse());
+        setAcceptedDonations((acceptedRes.data.data || []).reverse());
       } catch (err) {
-        console.error("❌ Error fetching donations:", err);
-        setPendingDonations([]);
+        console.error("Error fetching donations:", err);
       }
     };
 
     fetchDonations();
 
-    // ✅ Real-time updates
+    socket.on("connect", () => console.log("WebSocket connected:", socket.id));
+    socket.on("disconnect", () => console.log("WebSocket disconnected"));
+
+    // ✅ Duplicate prevention + recent-first insert
     socket.on("newDonation", (donation) => {
-      setPendingDonations((prev) => [...prev, donation]);
+      setPendingDonations((prev) => {
+        const filtered = prev.filter((d) => d._id !== donation._id);
+        return [donation, ...filtered]; // recent on top
+      });
     });
 
-    socket.on("donationAccepted", (updated) => {
-      setPendingDonations((prev) => prev.filter((d) => d._id !== updated._id));
-      setAcceptedDonations((prev) => [...prev, updated]);
+    socket.on("donationAccepted", (donation) => {
+      setPendingDonations((prev) => prev.filter((d) => d._id !== donation._id));
+      setAcceptedDonations((prev) => {
+        const filtered = prev.filter((d) => d._id !== donation._id);
+        return [donation, ...filtered]; // recent on top
+      });
     });
 
-    socket.on("donationCancelled", (updated) => {
-      setAcceptedDonations((prev) => prev.filter((d) => d._id !== updated._id));
-      setPendingDonations((prev) => [...prev, updated]);
+    socket.on("donationCancelled", (donation) => {
+      setAcceptedDonations((prev) => prev.filter((d) => d._id !== donation._id));
+      setPendingDonations((prev) => {
+        const filtered = prev.filter((d) => d._id !== donation._id);
+        return [donation, ...filtered]; // recent on top
+      });
     });
 
     return () => {
@@ -64,110 +75,107 @@ const NgoDashboard = () => {
 
   const handleAccept = async (donation) => {
     try {
-      const res = await axios.put(`${API_URL}/donation/accept/${donation._id}`);
+      const token = localStorage.getItem("token");
+      const res = await axios.put(
+        `${API_URL}/donation/accept/${donation._id}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       setPendingDonations((prev) => prev.filter((d) => d._id !== donation._id));
-      setAcceptedDonations((prev) => [...prev, res.data.data]);
+      setAcceptedDonations((prev) => {
+        const filtered = prev.filter((d) => d._id !== donation._id);
+        return [res.data.data, ...filtered]; // recent on top
+      });
     } catch (err) {
-      console.error("❌ Error accepting donation:", err);
+      console.error(err);
     }
   };
 
   const handleCancel = async (donation) => {
     try {
-      const res = await axios.put(`${API_URL}/donation/cancel/${donation._id}`);
-      setAcceptedDonations((prev) => prev.filter((d) => d._id !== donation._id));
-      setPendingDonations((prev) => [...prev, res.data.data]);
+      const token = localStorage.getItem("token");
+      const res = await axios.put(
+        `${API_URL}/donation/cancel/${donation._id}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setAcceptedDonations((prev) =>
+        prev.filter((d) => d._id !== donation._id)
+      );
+      setPendingDonations((prev) => {
+        const filtered = prev.filter((d) => d._id !== donation._id);
+        return [res.data.data, ...filtered]; // recent on top
+      });
     } catch (err) {
-      console.error("❌ Error cancelling donation:", err);
+      console.error(err);
     }
   };
 
+  const renderDonationCard = (d, action) => (
+    <div
+      key={d._id}
+      className="border p-3 mb-2 flex justify-between items-center gap-4 rounded-lg shadow-sm bg-white"
+    >
+      <div className="flex items-center gap-3">
+        {d.photo && (
+          <img
+            src={d.photo}
+            alt={d.foodName}
+            className="w-16 h-16 object-cover rounded-md border"
+          />
+        )}
+        <div>
+          <p className="font-semibold text-gray-800">{d.foodName}</p>
+          <p className="text-sm text-gray-600">🍴 {d.quantity}</p>
+          <p className="text-sm text-gray-600">📍 {d.location}</p>
+          <p className="text-sm text-gray-600">⏰ {d.expiry}</p>
+        </div>
+      </div>
+      {action}
+    </div>
+  );
+
   return (
-    <div className="min-h-screen mt-12 bg-gradient-to-br from-purple-100 via-pink-50 to-blue-100 p-6">
-      <motion.h1
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="text-3xl md:text-4xl font-extrabold text-center text-purple-700 mb-8"
-      >
-        🌟 Welcome, NGO Member 🌟
-      </motion.h1>
+    <div className="p-6">
+      <h1 className="text-3xl font-bold mb-6">NGO Dashboard</h1>
 
       {/* Pending Donations */}
-      <section className="mb-10">
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">Pending Donations</h2>
+      <section className="mb-8">
+        <h2 className="text-2xl mb-4">Pending Donations</h2>
         {pendingDonations.length === 0 ? (
-          <p className="text-gray-600">No pending donations right now.</p>
+          <p className="text-gray-500">No pending donations.</p>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {pendingDonations.map((donation) => (
-              <motion.div
-                key={donation._id}
-                whileHover={{ scale: 1.02 }}
-                className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200 flex flex-col"
+          pendingDonations.map((d) =>
+            renderDonationCard(
+              d,
+              <button
+                onClick={() => handleAccept(d)}
+                className="bg-green-500 text-white px-3 py-1 rounded flex items-center gap-1 hover:bg-green-600"
               >
-                <img
-                  src={donation.photo || "https://source.unsplash.com/400x300/?food"}
-                  alt={donation.foodName}
-                  className="w-full h-40 object-cover"
-                />
-                <div className="p-4 flex flex-col flex-1">
-                  <h3 className="text-lg font-semibold text-gray-800">{donation.foodName}</h3>
-                  <p className="text-sm text-gray-600">Quantity: {donation.quantity}</p>
-                  <p className="text-sm text-gray-600">Location: {donation.location}</p>
-                  <p className="text-sm text-gray-600">Expiry: {donation.expiry || "N/A"}</p>
-                  <span className="mt-2 inline-block px-3 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800 w-max">
-                    Pending
-                  </span>
-                  <button
-                    onClick={() => handleAccept(donation)}
-                    className="mt-4 flex items-center justify-center gap-2 bg-gradient-to-r from-green-400 to-green-600 text-white py-2 px-4 rounded-xl hover:opacity-90 transition"
-                  >
-                    <CheckCircle className="w-5 h-5" /> Accept
-                  </button>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+                <CheckCircle size={16} /> Accept
+              </button>
+            )
+          )
         )}
       </section>
 
       {/* Accepted Donations */}
       <section>
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">Accepted Donations</h2>
+        <h2 className="text-2xl mb-4">Accepted Donations</h2>
         {acceptedDonations.length === 0 ? (
-          <p className="text-gray-600">No accepted donations yet.</p>
+          <p className="text-gray-500">No accepted donations.</p>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {acceptedDonations.map((donation) => (
-              <motion.div
-                key={donation._id}
-                whileHover={{ scale: 1.02 }}
-                className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200 flex flex-col"
+          acceptedDonations.map((d) =>
+            renderDonationCard(
+              d,
+              <button
+                onClick={() => handleCancel(d)}
+                className="bg-red-500 text-white px-3 py-1 rounded flex items-center gap-1 hover:bg-red-600"
               >
-                <img
-                  src={donation.photo || "https://source.unsplash.com/400x300/?food"}
-                  alt={donation.foodName}
-                  className="w-full h-40 object-cover"
-                />
-                <div className="p-4 flex flex-col flex-1">
-                  <h3 className="text-lg font-semibold text-gray-800">{donation.foodName}</h3>
-                  <p className="text-sm text-gray-600">Quantity: {donation.quantity}</p>
-                  <p className="text-sm text-gray-600">Location: {donation.location}</p>
-                  <p className="text-sm text-gray-600">Expiry: {donation.expiry || "N/A"}</p>
-                  <span className="mt-2 inline-block px-3 py-1 text-xs rounded-full bg-green-100 text-green-800 w-max">
-                    Accepted
-                  </span>
-                  <button
-                    onClick={() => handleCancel(donation)}
-                    className="mt-4 flex items-center justify-center gap-2 bg-gradient-to-r from-red-400 to-red-600 text-white py-2 px-4 rounded-xl hover:opacity-90 transition"
-                  >
-                    <XCircle className="w-5 h-5" /> Cancel
-                  </button>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+                <XCircle size={16} /> Cancel
+              </button>
+            )
+          )
         )}
       </section>
     </div>
@@ -175,3 +183,4 @@ const NgoDashboard = () => {
 };
 
 export default NgoDashboard;
+

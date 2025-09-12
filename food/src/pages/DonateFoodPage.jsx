@@ -21,27 +21,52 @@ const DonorDashboard = ({ donorName = "Donor" }) => {
     foodName: "",
     quantity: "",
     location: "",
-    expiry: "", // ✅ backend ke field ke saath match
+    expiry: "",
     photo: null,
   });
   const [preview, setPreview] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
 
+  // ✅ Socket listeners for live updates
   useEffect(() => {
     socket.on("donationAccepted", (updatedDonation) => {
-      setDonations((prev) =>
-        prev.map((donation) =>
-          donation._id === updatedDonation._id ? updatedDonation : donation
-        )
-      );
+      setDonations((prev) => {
+        const filtered = prev.filter((d) => d._id !== updatedDonation._id);
+        return [updatedDonation, ...filtered]; // ✅ recent top
+      });
     });
 
     socket.on("donationCancelled", (updatedDonation) => {
-      setDonations((prev) =>
-        prev.map((donation) =>
-          donation._id === updatedDonation._id ? updatedDonation : donation
-        )
-      );
+      setDonations((prev) => {
+        const filtered = prev.filter((d) => d._id !== updatedDonation._id);
+        return [updatedDonation, ...filtered]; // ✅ recent top
+      });
     });
+
+    // Fetch initial donor submissions
+    const fetchDonations = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get(`${API_URL}/donation/pending`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const acceptedRes = await axios.get(`${API_URL}/donation/accepted`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        // ✅ sort by createdAt descending (latest first)
+        const allDonations = [...res.data.data, ...acceptedRes.data.data].sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        );
+
+        setDonations(allDonations);
+      } catch (err) {
+        console.error("Error fetching donations:", err);
+      }
+    };
+
+    fetchDonations();
 
     return () => {
       socket.off("donationAccepted");
@@ -63,6 +88,8 @@ const DonorDashboard = ({ donorName = "Donor" }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setMessage("");
+
     if (
       !formData.foodName ||
       !formData.quantity ||
@@ -70,11 +97,13 @@ const DonorDashboard = ({ donorName = "Donor" }) => {
       !formData.expiry ||
       !formData.photo
     ) {
-      alert("Please fill all fields including photo!");
+      setMessage("⚠️ Please fill all fields including photo!");
       return;
     }
 
     try {
+      setLoading(true);
+
       const data = new FormData();
       data.append("foodName", formData.foodName);
       data.append("quantity", formData.quantity);
@@ -82,14 +111,17 @@ const DonorDashboard = ({ donorName = "Donor" }) => {
       data.append("expiry", formData.expiry);
       data.append("photo", formData.photo);
 
+      const token = localStorage.getItem("token");
+
       const res = await axios.post(`${API_URL}/donation`, data, {
-        headers: { "Content-Type": "multipart/form-data" },
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
+        },
       });
 
-      console.log("✅ Donation submitted:", res.data);
-
-      const newDonation = res.data.data; // ✅ backend se `data` ke andar aata hai
-      setDonations([newDonation, ...donations]);
+      const newDonation = res.data.data;
+      setDonations((prev) => [newDonation, ...prev]); // ✅ recent top
 
       setFormData({
         foodName: "",
@@ -99,18 +131,18 @@ const DonorDashboard = ({ donorName = "Donor" }) => {
         photo: null,
       });
       setPreview(null);
+      setMessage("✅ Donation submitted successfully!");
     } catch (err) {
-      console.error(
-        "❌ Error submitting donation:",
-        err.response?.data || err.message || err
-      );
+      console.error("Error submitting donation:", err.response?.data || err);
+      setMessage(err.response?.data?.error || "❌ Failed to submit donation");
+    } finally {
+      setLoading(false);
     }
   };
 
-  // ✅ Status label format
   const getStatusLabel = (status) => {
     if (status === "accepted") return "Accepted by NGO ✅";
-    return "Pending NGO Approval";
+    return "Pending NGO Approval ⏳";
   };
 
   return (
@@ -133,7 +165,7 @@ const DonorDashboard = ({ donorName = "Donor" }) => {
       </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-10">
-        {/* Form */}
+        {/* Donation Form */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -143,6 +175,15 @@ const DonorDashboard = ({ donorName = "Donor" }) => {
           <h2 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 text-gray-800">
             Donate Food 🍲
           </h2>
+          {message && (
+            <p
+              className={`text-center mb-4 ${
+                message.includes("✅") ? "text-green-600" : "text-red-500"
+              }`}
+            >
+              {message}
+            </p>
+          )}
           <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
             <input
               type="text"
@@ -177,6 +218,7 @@ const DonorDashboard = ({ donorName = "Donor" }) => {
               className="w-full border rounded-xl p-2 sm:p-3 focus:ring-2 focus:ring-green-400 outline-none text-sm sm:text-base"
             />
 
+            {/* File Upload */}
             <div className="border-2 border-dashed rounded-xl p-4 sm:p-6 flex flex-col items-center justify-center hover:bg-green-50 transition">
               <label className="cursor-pointer flex flex-col items-center">
                 <Upload className="w-6 h-6 sm:w-8 sm:h-8 text-green-500 mb-2" />
@@ -203,14 +245,15 @@ const DonorDashboard = ({ donorName = "Donor" }) => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               type="submit"
+              disabled={loading}
               className="w-full bg-green-600 text-white py-2 sm:py-3 rounded-xl font-semibold shadow-lg hover:bg-green-700 transition text-sm sm:text-base"
             >
-              Submit Donation
+              {loading ? "Submitting..." : "Submit Donation"}
             </motion.button>
           </form>
         </motion.div>
 
-        {/* List */}
+        {/* Donor Submissions */}
         <div>
           <h2 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 text-gray-800">
             Your Submissions 📋
@@ -247,15 +290,15 @@ const DonorDashboard = ({ donorName = "Donor" }) => {
                     <p className="text-xs sm:text-sm text-gray-600">
                       ⏰ Expiry: {donation.expiry}
                     </p>
-                    <span
-                      className={`inline-block mt-2 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${
+                    <p
+                      className={`mt-1 text-xs sm:text-sm font-semibold ${
                         donation.status === "accepted"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-yellow-100 text-yellow-700"
+                          ? "text-green-600"
+                          : "text-yellow-600"
                       }`}
                     >
                       {getStatusLabel(donation.status)}
-                    </span>
+                    </p>
                   </div>
                 </motion.div>
               ))}
