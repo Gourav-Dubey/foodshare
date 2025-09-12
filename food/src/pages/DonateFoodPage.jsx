@@ -7,12 +7,12 @@ import { io } from "socket.io-client";
 const API_URL =
   window.location.hostname === "localhost"
     ? "http://localhost:5000/api"
-    : "https://foodsharebackend.onrender.com/api";
+    : "https://foodsharebackendnew.onrender.com/api";
 
 const socket = io(
   window.location.hostname === "localhost"
     ? "http://localhost:5000"
-    : "https://foodsharebackend.onrender.com"
+    : "https://foodsharebackendnew.onrender.com"
 );
 
 const DonorDashboard = ({ donorName = "Donor" }) => {
