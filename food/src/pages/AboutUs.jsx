@@ -21,21 +21,21 @@ const team = [
   { 
     name: "Manish Tiwari", 
     role: "Operations Director", 
-    img: "",
+    img: "7.jpg",
     bio: "Logistics expert with 10+ years in supply chain management for humanitarian organizations.",
     social: { linkedin: "#", twitter: "#" }
   },
   { 
     name: "Mayank Tiwari", 
     role: "Technology Lead", 
-    img: "",
+    img: "8.jpg",
     bio: "Software engineer passionate about using technology to solve real-world problems.",
     social: { linkedin: "#", twitter: "#" }
   },
   { 
     name: "Rohit Thakur", 
     role: "Community Manager", 
-    img: "",
+    img: "9.jpg",
     bio: "Software Engineer and Social Worker.",
     social: { linkedin: "#", twitter: "#" }
   },
