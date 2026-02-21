@@ -22,7 +22,6 @@ const FoodShareSideDock = ({ onAIOpen }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isDockOpen, setIsDockOpen] = useState(true);
 
-  // Detect screen size
   useEffect(() => {
     const checkScreenSize = () => {
       setIsMobile(window.innerWidth < 768);
@@ -46,7 +45,6 @@ const FoodShareSideDock = ({ onAIOpen }) => {
         if (isMobile) setMobileMenuOpen(false);
         return;
       }
-
       navigate(path);
       if (isMobile) setMobileMenuOpen(false);
     },
@@ -61,43 +59,121 @@ const FoodShareSideDock = ({ onAIOpen }) => {
       <>
         {/* Toggle Button */}
         <motion.button
-          className="fixed left-0 top-1/2 -translate-y-1/2 z-50 bg-green-600 text-white p-2 rounded-r-xl shadow-md hover:bg-green-700"
+          style={{
+            position: "fixed",
+            left: 0,
+            top: 0,
+            bottom: 0,
+            margin: "auto 0",
+            height: "fit-content",
+            zIndex: 50,
+            background: "linear-gradient(135deg, #14532d, #16a34a)",
+            color: "#fff",
+            padding: "8px 5px",
+            borderRadius: "0 10px 10px 0",
+            border: "none",
+            cursor: "pointer",
+            boxShadow: "2px 0 12px rgba(22,163,74,0.3)",
+          }}
           onClick={() => setIsDockOpen(!isDockOpen)}
           whileTap={{ scale: 0.9 }}
         >
-          {isDockOpen ? <FaChevronLeft /> : <FaChevronRight />}
+          {isDockOpen ? <FaChevronLeft size={12} /> : <FaChevronRight size={12} />}
         </motion.button>
 
         <AnimatePresence>
           {isDockOpen && (
             <motion.div
-              className="fixed left-4 top-1/2 transform -translate-y-1/2 flex flex-col bg-white/90 backdrop-blur-xl rounded-2xl p-3 border border-green-200/50 shadow-xl z-40"
+              style={{
+                position: "fixed",
+                left: 16,
+                top: 0,
+                bottom: 0,
+                margin: "auto 0",
+                height: "fit-content",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                background: "rgba(5, 18, 11, 0.92)",
+                backdropFilter: "blur(16px)",
+                WebkitBackdropFilter: "blur(16px)",
+                borderRadius: 20,
+                padding: "14px 10px",
+                border: "1px solid rgba(34,197,94,0.15)",
+                boxShadow: "0 8px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(34,197,94,0.08) inset",
+                zIndex: 40,
+              }}
               initial={{ x: -100, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: -100, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 28 }}
             >
               {/* Logo */}
-              <div className="flex justify-center mb-4 p-2">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-r from-green-400 to-emerald-500 flex items-center justify-center shadow-md">
-                  <FaUtensils className="text-lg text-white" />
+              <div style={{ marginBottom: 14, padding: "6px 0" }}>
+                <div style={{
+                  width: 42, height: 42, borderRadius: "50%",
+                  background: "linear-gradient(135deg, #14532d, #16a34a)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  boxShadow: "0 4px 15px rgba(22,163,74,0.35)",
+                  border: "1px solid rgba(74,222,128,0.2)",
+                }}>
+                  <FaUtensils style={{ color: "#fff", fontSize: 16 }} />
                 </div>
               </div>
+
+              {/* Divider */}
+              <div style={{ width: 32, height: 1, background: "rgba(34,197,94,0.15)", marginBottom: 10 }} />
 
               {/* Buttons */}
               {buttons.map((button) => {
                 const isActive = location.pathname === button.id;
+                const isHovered = hoveredButton === button.id;
                 return (
                   <motion.button
                     key={button.id}
-                    className={`w-12 h-12 my-2 rounded-xl flex items-center justify-center text-xl ${
-                      isActive
-                        ? "bg-green-600 text-white"
-                        : "bg-green-50 text-green-700"
-                    }`}
-                    whileTap={{ scale: 0.95 }}
+                    onMouseEnter={() => setHoveredButton(button.id)}
+                    onMouseLeave={() => setHoveredButton(null)}
                     onClick={() => handleButtonClick(button.id)}
+                    whileTap={{ scale: 0.92 }}
+                    style={{
+                      width: 44, height: 44,
+                      margin: "5px 0",
+                      borderRadius: 13,
+                      border: isActive
+                        ? "1px solid rgba(74,222,128,0.35)"
+                        : isHovered
+                        ? "1px solid rgba(34,197,94,0.2)"
+                        : "1px solid transparent",
+                      background: isActive
+                        ? "linear-gradient(135deg, rgba(22,163,74,0.3), rgba(20,83,45,0.4))"
+                        : isHovered
+                        ? "rgba(34,197,94,0.1)"
+                        : "rgba(255,255,255,0.03)",
+                      color: isActive ? "#4ade80" : isHovered ? "#86efac" : "rgba(167,243,208,0.45)",
+                      cursor: "pointer",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 16,
+                      boxShadow: isActive ? "0 0 14px rgba(74,222,128,0.15)" : "none",
+                      transition: "all 0.2s ease",
+                      position: "relative",
+                    }}
                   >
                     {button.icon}
+                    {/* Active dot */}
+                    {isActive && (
+                      <motion.div
+                        layoutId="activeDot"
+                        style={{
+                          position: "absolute",
+                          right: -2, top: "50%",
+                          transform: "translateY(-50%)",
+                          width: 4, height: 4,
+                          borderRadius: "50%",
+                          background: "#4ade80",
+                          boxShadow: "0 0 6px #4ade80",
+                        }}
+                      />
+                    )}
                   </motion.button>
                 );
               })}
@@ -115,15 +191,20 @@ const FoodShareSideDock = ({ onAIOpen }) => {
     <>
       {/* Floating Button */}
       <motion.button
-        className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 text-white flex items-center justify-center shadow-lg z-50"
+        style={{
+          position: "fixed", bottom: 24, right: 24,
+          width: 56, height: 56, borderRadius: "50%",
+          background: "linear-gradient(135deg, #14532d, #16a34a)",
+          color: "#fff", border: "1px solid rgba(74,222,128,0.25)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          boxShadow: "0 6px 24px rgba(22,163,74,0.4)",
+          cursor: "pointer", zIndex: 50,
+          fontSize: 20,
+        }}
         whileTap={{ scale: 0.9 }}
         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
       >
-        {mobileMenuOpen ? (
-          <FaTimes className="text-xl" />
-        ) : (
-          <FaBars className="text-xl" />
-        )}
+        {mobileMenuOpen ? <FaTimes /> : <FaBars />}
       </motion.button>
 
       <AnimatePresence>
@@ -131,7 +212,12 @@ const FoodShareSideDock = ({ onAIOpen }) => {
           <>
             {/* Overlay */}
             <motion.div
-              className="fixed inset-0 bg-black/30 z-40"
+              style={{
+                position: "fixed", inset: 0,
+                background: "rgba(0,0,0,0.6)",
+                backdropFilter: "blur(4px)",
+                zIndex: 40,
+              }}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -140,39 +226,72 @@ const FoodShareSideDock = ({ onAIOpen }) => {
 
             {/* Bottom Sheet */}
             <motion.div
-              className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl rounded-t-3xl shadow-2xl z-50 p-4"
+              style={{
+                position: "fixed", bottom: 0, left: 0, right: 0,
+                background: "rgba(5,18,11,0.97)",
+                backdropFilter: "blur(20px)",
+                WebkitBackdropFilter: "blur(20px)",
+                borderRadius: "24px 24px 0 0",
+                border: "1px solid rgba(34,197,94,0.15)",
+                borderBottom: "none",
+                boxShadow: "0 -8px 40px rgba(0,0,0,0.5)",
+                zIndex: 50, padding: "20px 16px 32px",
+              }}
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
             >
-              <div className="flex justify-center items-center mb-4">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-r from-green-400 to-emerald-500 flex items-center justify-center shadow-md">
-                  <FaUtensils className="text-lg text-white" />
+              {/* Handle */}
+              <div style={{
+                width: 40, height: 4, borderRadius: 2,
+                background: "rgba(34,197,94,0.2)",
+                margin: "0 auto 16px",
+              }} />
+
+              {/* Brand */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
+                <div style={{
+                  width: 38, height: 38, borderRadius: "50%",
+                  background: "linear-gradient(135deg, #14532d, #16a34a)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  boxShadow: "0 4px 12px rgba(22,163,74,0.3)",
+                  border: "1px solid rgba(74,222,128,0.2)",
+                }}>
+                  <FaUtensils style={{ color: "#fff", fontSize: 15 }} />
                 </div>
-                <span className="ml-2 font-semibold text-green-800">
-                  FoodShare
-                </span>
+                <span style={{ marginLeft: 8, fontWeight: 600, color: "#ecfdf5", fontSize: 16 }}>FoodShare</span>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              {/* Divider */}
+              <div style={{ height: 1, background: "rgba(34,197,94,0.1)", marginBottom: 16 }} />
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                 {buttons.map((button) => {
                   const isActive = location.pathname === button.id;
                   return (
                     <motion.button
                       key={button.id}
-                      className={`flex flex-col items-center justify-center p-3 rounded-xl ${
-                        isActive
-                          ? "bg-green-600 text-white"
-                          : "bg-green-50 text-green-700"
-                      }`}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => handleButtonClick(button.id)}
+                      style={{
+                        display: "flex", flexDirection: "column",
+                        alignItems: "center", justifyContent: "center",
+                        padding: "14px 10px",
+                        borderRadius: 14,
+                        border: isActive
+                          ? "1px solid rgba(74,222,128,0.3)"
+                          : "1px solid rgba(34,197,94,0.08)",
+                        background: isActive
+                          ? "linear-gradient(135deg, rgba(22,163,74,0.25), rgba(20,83,45,0.35))"
+                          : "rgba(255,255,255,0.03)",
+                        color: isActive ? "#4ade80" : "rgba(167,243,208,0.5)",
+                        cursor: "pointer",
+                        boxShadow: isActive ? "0 0 16px rgba(74,222,128,0.1)" : "none",
+                      }}
                     >
-                      <div className="text-xl mb-1">{button.icon}</div>
-                      <span className="text-xs font-medium">
-                        {button.label}
-                      </span>
+                      <div style={{ fontSize: 20, marginBottom: 6 }}>{button.icon}</div>
+                      <span style={{ fontSize: 12, fontWeight: 500 }}>{button.label}</span>
                     </motion.button>
                   );
                 })}

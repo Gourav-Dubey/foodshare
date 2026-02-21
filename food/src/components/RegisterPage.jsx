@@ -3,15 +3,100 @@ import { motion } from "framer-motion";
 import API from "../utils/api";
 import { FaUtensils, FaUser, FaEnvelope, FaLock, FaEye, FaEyeSlash, FaHandHoldingHeart, FaUsers, FaCheck } from "react-icons/fa";
 
-const RegisterPage = () => {
-  const [formData, setFormData] = useState({
-    role: "donor",
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: ""
-  });
+const S = {
+  root: {
+    minHeight: "100vh", display: "flex", alignItems: "center",
+    justifyContent: "center", background: "#030d09",
+    padding: "32px 16px", position: "relative", overflow: "hidden", isolation: "isolate",
+  },
+  blob1: {
+    position: "absolute", borderRadius: "50%", filter: "blur(90px)",
+    width: 400, height: 400, background: "#0a3d1f",
+    top: -100, left: -100, zIndex: 0, pointerEvents: "none",
+  },
+  blob2: {
+    position: "absolute", borderRadius: "50%", filter: "blur(90px)",
+    width: 300, height: 300, background: "#052910",
+    bottom: -80, right: -60, zIndex: 0, pointerEvents: "none",
+  },
+  card: {
+    position: "relative", zIndex: 1, width: "100%", maxWidth: 520,
+    background: "rgba(5,18,11,0.93)", border: "1px solid rgba(34,197,94,0.12)",
+    borderRadius: 20, overflow: "hidden",
+    boxShadow: "0 20px 60px rgba(0,0,0,0.7), 0 0 40px rgba(10,80,35,0.12) inset",
+  },
+  header: {
+    background: "linear-gradient(135deg,#14532d,#166534)",
+    padding: "20px 32px", textAlign: "center",
+    borderBottom: "1px solid rgba(34,197,94,0.15)",
+  },
+  headerBrand: { display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 8 },
+  headerTitle: { fontSize: 22, fontWeight: 700, color: "#ecfdf5", margin: 0 },
+  headerSub: { fontSize: 13, color: "rgba(187,247,208,0.6)", marginTop: 4 },
+  body: { padding: "20px 32px" },
+  error: {
+    background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)",
+    color: "#fca5a5", borderRadius: 10, padding: "9px 14px",
+    fontSize: 13, textAlign: "center", marginBottom: 16,
+  },
+  roleWrap: {
+    display: "flex", gap: 8, marginBottom: 16,
+    background: "rgba(255,255,255,0.04)", padding: 4, borderRadius: 12,
+  },
+  roleBtn: (active) => ({
+    flex: 1, padding: "8px 12px", borderRadius: 9, border: "none",
+    fontSize: 13, fontWeight: 500, cursor: "pointer",
+    display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+    transition: "all .2s",
+    background: active ? "rgba(22,163,74,0.2)" : "transparent",
+    color: active ? "#4ade80" : "rgba(167,243,208,0.35)",
+    boxShadow: active ? "inset 0 0 0 1px rgba(74,222,128,0.25)" : "none",
+  }),
+  label: {
+    display: "block", fontSize: 11, fontWeight: 500,
+    letterSpacing: "1.1px", textTransform: "uppercase",
+    color: "rgba(74,222,128,0.55)", marginBottom: 6,
+  },
+  fieldWrap: { position: "relative", marginBottom: 4 },
+  icon: {
+    position: "absolute", left: 12, top: "50%",
+    transform: "translateY(-50%)", color: "rgba(74,222,128,0.35)",
+    fontSize: 13, pointerEvents: "none",
+  },
+  input: (hasErr) => ({
+    width: "100%", boxSizing: "border-box",
+    background: "rgba(255,255,255,0.03)",
+    border: `1px solid ${hasErr ? "rgba(239,68,68,0.4)" : "rgba(34,197,94,0.12)"}`,
+    borderRadius: 11, padding: "10px 38px 10px 36px",
+    color: "#d1fae5", fontSize: 14, outline: "none",
+    fontFamily: "inherit", caretColor: "#4ade80",
+    transition: "border .2s, box-shadow .2s",
+  }),
+  eyeBtn: {
+    position: "absolute", right: 12, top: "50%",
+    transform: "translateY(-50%)", background: "none",
+    border: "none", color: "rgba(167,243,208,0.3)", cursor: "pointer", padding: 0,
+  },
+  fieldErr: { fontSize: 12, color: "#fca5a5", marginTop: 4, marginBottom: 6 },
+  strengthBar: { height: 3, borderRadius: 2, transition: "width .3s" },
+  strengthRow: { display: "flex", justifyContent: "space-between", fontSize: 11, color: "rgba(167,243,208,0.4)", marginTop: 4, marginBottom: 6 },
+  checkRow: { display: "flex", alignItems: "flex-start", gap: 8, fontSize: 13, color: "rgba(167,243,208,0.45)", margin: "10px 0" },
+  btn: {
+    width: "100%", padding: "12px", marginTop: 4,
+    background: "linear-gradient(135deg,#14532d,#16a34a)",
+    border: "none", borderRadius: 11, color: "#fff",
+    fontSize: 15, fontWeight: 500, cursor: "pointer",
+    display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+    boxShadow: "0 4px 20px rgba(22,163,74,0.25)", fontFamily: "inherit",
+  },
+  divider: { display: "flex", alignItems: "center", gap: 12, margin: "16px 0" },
+  divLine: { flex: 1, height: 1, background: "rgba(34,197,94,0.1)" },
+  divText: { fontSize: 12, color: "rgba(167,243,208,0.25)" },
+  footer: { textAlign: "center", fontSize: 13, color: "rgba(167,243,208,0.35)" },
+};
 
+const RegisterPage = () => {
+  const [formData, setFormData] = useState({ role: "donor", name: "", email: "", password: "", confirmPassword: "" });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -21,357 +106,178 @@ const RegisterPage = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
-    
-    // Clear error when user types
-    if (errors[name]) {
-      setErrors({ ...errors, [name]: "" });
-    }
-    
-    // Check password strength
+    if (errors[name]) setErrors({ ...errors, [name]: "" });
     if (name === "password") {
-      calculatePasswordStrength(value);
+      let s = 0;
+      if (value.length >= 8) s += 25;
+      if (/[A-Z]/.test(value)) s += 25;
+      if (/[0-9]/.test(value)) s += 25;
+      if (/[^A-Za-z0-9]/.test(value)) s += 25;
+      setPasswordStrength(s);
     }
-  };
-
-  const calculatePasswordStrength = (password) => {
-    let strength = 0;
-    if (password.length >= 8) strength += 25;
-    if (/[A-Z]/.test(password)) strength += 25;
-    if (/[0-9]/.test(password)) strength += 25;
-    if (/[^A-Za-z0-9]/.test(password)) strength += 25;
-    setPasswordStrength(strength);
   };
 
   const validateForm = () => {
-    const newErrors = {};
-    
-    if (!formData.name.trim()) {
-      newErrors.name = "Full name is required";
-    }
-    
-    if (!formData.email) {
-      newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Email is invalid";
-    }
-    
-    if (!formData.password) {
-      newErrors.password = "Password is required";
-    } else if (formData.password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters";
-    }
-    
-    if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match";
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    const e = {};
+    if (!formData.name.trim()) e.name = "Full name is required";
+    if (!formData.email) e.email = "Email is required";
+    else if (!/\S+@\S+\.\S+/.test(formData.email)) e.email = "Email is invalid";
+    if (!formData.password) e.password = "Password is required";
+    else if (formData.password.length < 8) e.password = "Password must be at least 8 characters";
+    if (formData.password !== formData.confirmPassword) e.confirmPassword = "Passwords do not match";
+    setErrors(e);
+    return Object.keys(e).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
-
+    if (!validateForm()) return;
     try {
       setLoading(true);
       const res = await API.post("/auth/register", {
-        role: formData.role,
-        name: formData.name,
-        email: formData.email,
-        password: formData.password
+        role: formData.role, name: formData.name,
+        email: formData.email, password: formData.password,
       });
-
-      // ✅ Token + User info save
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
       localStorage.setItem("role", formData.role);
-
       alert("✅ Registration successful!");
-      
-      // Redirect based on role
-      if (formData.role === "donor") {
-        window.location.href = "/donor-dashboard";
-      } else {
-        window.location.href = "/ngo-dashboard";
-      }
-      
+      window.location.href = formData.role === "donor" ? "/donor-dashboard" : "/ngo-dashboard";
     } catch (err) {
-      const errorMessage = err.response?.data?.message || "Registration failed. Please try again.";
-      setErrors({ submit: errorMessage });
+      const msg = err.response?.data?.message || "Registration failed. Please try again.";
+      setErrors({ submit: msg });
       setTimeout(() => setErrors({}), 4000);
     } finally {
       setLoading(false);
     }
   };
 
-  const getPasswordStrengthColor = () => {
-    if (passwordStrength >= 75) return "bg-green-500";
-    if (passwordStrength >= 50) return "bg-yellow-500";
-    if (passwordStrength >= 25) return "bg-orange-500";
-    return "bg-red-500";
-  };
+  const strengthColor = passwordStrength >= 75 ? "#22c55e" : passwordStrength >= 50 ? "#eab308" : passwordStrength >= 25 ? "#f97316" : "#ef4444";
+  const strengthText = passwordStrength >= 75 ? "Strong" : passwordStrength >= 50 ? "Medium" : passwordStrength >= 25 ? "Weak" : "Very Weak";
 
-  const getPasswordStrengthText = () => {
-    if (passwordStrength >= 75) return "Strong";
-    if (passwordStrength >= 50) return "Medium";
-    if (passwordStrength >= 25) return "Weak";
-    return "Very Weak";
-  };
+  const onFocus = (e) => { e.target.style.borderColor = "rgba(74,222,128,0.35)"; e.target.style.boxShadow = "0 0 0 3px rgba(22,163,74,0.1)"; };
+  const onBlur = (e) => { e.target.style.borderColor = errors[e.target.name] ? "rgba(239,68,68,0.4)" : "rgba(34,197,94,0.12)"; e.target.style.boxShadow = "none"; };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 px-4 py-8">
-      <motion.div 
-        className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-      >
+    <div style={S.root}>
+      <div style={S.blob1} />
+      <div style={S.blob2} />
+
+      <motion.div style={S.card} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
         {/* Header */}
-        <div className="bg-gradient-to-r from-green-500 to-emerald-600 p-6 text-center">
-          <div className="flex items-center justify-center mb-2">
-            <FaUtensils className="text-white text-2xl mr-2" />
-            <h1 className="text-2xl font-bold text-white">FoodShare</h1>
+        <div style={S.header}>
+          <div style={S.headerBrand}>
+            <FaUtensils color="#4ade80" size={18} />
+            <h1 style={S.headerTitle}>FoodShare</h1>
           </div>
-          <h2 className="text-xl font-semibold text-white mt-2">Create Account</h2>
-          <p className="text-green-100 mt-1">Join us in the fight against hunger</p>
+          <h2 style={{ fontSize: 18, fontWeight: 600, color: "#ecfdf5", margin: 0 }}>Create Account</h2>
+          <p style={S.headerSub}>Join us in the fight against hunger</p>
         </div>
 
-        {/* Content */}
-        <div className="p-6">
-          {/* Error Message */}
-          {errors.submit && (
-            <motion.div 
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-sm"
-            >
-              {errors.submit}
-            </motion.div>
-          )}
+        {/* Body */}
+        <div style={S.body}>
+          {errors.submit && <div style={S.error}>⚠️ {errors.submit}</div>}
 
-          {/* Role Selection */}
-          <div className="flex space-x-2 mb-6 bg-gray-100 p-1 rounded-lg">
-            <button
-              type="button"
-              onClick={() => setFormData({...formData, role: "donor"})}
-              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-1 ${
-                formData.role === "donor"
-                  ? "bg-white text-green-700 shadow-sm"
-                  : "text-gray-600 hover:text-green-700"
-              }`}
-            >
-              <FaHandHoldingHeart size={12} />
-              <span>Donor</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setFormData({...formData, role: "ngo"})}
-              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-1 ${
-                formData.role === "ngo"
-                  ? "bg-white text-green-700 shadow-sm"
-                  : "text-gray-600 hover:text-green-700"
-              }`}
-            >
-              <FaUsers size={12} />
-              <span>NGO</span>
-            </button>
+          {/* Role Toggle */}
+          <div style={S.roleWrap}>
+            {["donor", "ngo"].map((r) => (
+              <button key={r} type="button" onClick={() => setFormData({ ...formData, role: r })} style={S.roleBtn(formData.role === r)}>
+                {r === "donor" ? <FaHandHoldingHeart size={12} /> : <FaUsers size={12} />}
+                {r === "donor" ? "Donor" : "NGO"}
+              </button>
+            ))}
           </div>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Name Field */}
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                Full Name
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                  <FaUser size={14} />
+          <form onSubmit={handleSubmit}>
+            {/* Two column layout for Name + Email */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
+              <div>
+                <label style={S.label}>Full Name</label>
+                <div style={S.fieldWrap}>
+                  <FaUser style={S.icon} />
+                  <input name="name" type="text" placeholder="Your full name" value={formData.name}
+                    onChange={handleChange} onFocus={onFocus} onBlur={onBlur}
+                    style={S.input(!!errors.name)} required />
                 </div>
-                <input
-                  id="name"
-                  name="name"
-                  type="text"
-                  placeholder="Enter your full name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all ${
-                    errors.name ? "border-red-500" : "border-gray-300"
-                  }`}
-                  required
-                />
+                {errors.name && <p style={S.fieldErr}>{errors.name}</p>}
               </div>
-              {errors.name && (
-                <p className="mt-1 text-sm text-red-600">{errors.name}</p>
-              )}
+
+              <div>
+                <label style={S.label}>Email Address</label>
+                <div style={S.fieldWrap}>
+                  <FaEnvelope style={S.icon} />
+                  <input name="email" type="email" placeholder="Your email" value={formData.email}
+                    onChange={handleChange} onFocus={onFocus} onBlur={onBlur}
+                    style={S.input(!!errors.email)} required />
+                </div>
+                {errors.email && <p style={S.fieldErr}>{errors.email}</p>}
+              </div>
             </div>
 
-            {/* Email Field */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                Email Address
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                  <FaEnvelope size={14} />
+            {/* Two column layout for Password + Confirm Password */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
+              <div>
+                <label style={S.label}>Password</label>
+                <div style={S.fieldWrap}>
+                  <FaLock style={S.icon} />
+                  <input name="password" type={showPassword ? "text" : "password"} placeholder="Create password"
+                    value={formData.password} onChange={handleChange} onFocus={onFocus} onBlur={onBlur}
+                    style={S.input(!!errors.password)} required />
+                  <button type="button" style={S.eyeBtn} onClick={() => setShowPassword(v => !v)}>
+                    {showPassword ? <FaEyeSlash size={13} /> : <FaEye size={13} />}
+                  </button>
                 </div>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="Enter your email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all ${
-                    errors.email ? "border-red-500" : "border-gray-300"
-                  }`}
-                  required
-                />
+                {formData.password && (
+                  <>
+                    <div style={{ background: "rgba(255,255,255,0.06)", borderRadius: 2, height: 3, marginTop: 6 }}>
+                      <div style={{ ...S.strengthBar, width: `${passwordStrength}%`, background: strengthColor }} />
+                    </div>
+                    <div style={S.strengthRow}><span>{strengthText}</span><span>{passwordStrength}%</span></div>
+                  </>
+                )}
+                {errors.password && <p style={S.fieldErr}>{errors.password}</p>}
               </div>
-              {errors.email && (
-                <p className="mt-1 text-sm text-red-600">{errors.email}</p>
-              )}
+
+              <div>
+                <label style={S.label}>Confirm Password</label>
+                <div style={S.fieldWrap}>
+                  <FaLock style={S.icon} />
+                  <input name="confirmPassword" type={showConfirmPassword ? "text" : "password"} placeholder="Confirm password"
+                    value={formData.confirmPassword} onChange={handleChange} onFocus={onFocus} onBlur={onBlur}
+                    style={S.input(!!errors.confirmPassword)} required />
+                  <button type="button" style={S.eyeBtn} onClick={() => setShowConfirmPassword(v => !v)}>
+                    {showConfirmPassword ? <FaEyeSlash size={13} /> : <FaEye size={13} />}
+                  </button>
+                </div>
+                {errors.confirmPassword && <p style={S.fieldErr}>{errors.confirmPassword}</p>}
+              </div>
             </div>
 
-            {/* Password Field */}
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                Password
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                  <FaLock size={14} />
-                </div>
-                <input
-                  id="password"
-                  name="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Create a password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  className={`w-full pl-10 pr-10 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all ${
-                    errors.password ? "border-red-500" : "border-gray-300"
-                  }`}
-                  required
-                />
-                <button
-                  type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-green-600 transition-colors"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? <FaEyeSlash size={14} /> : <FaEye size={14} />}
-                </button>
-              </div>
-              
-              {/* Password Strength Meter */}
-              {formData.password && (
-                <div className="mt-2">
-                  <div className="w-full bg-gray-200 rounded-full h-1.5">
-                    <div 
-                      className={`h-1.5 rounded-full ${getPasswordStrengthColor()}`} 
-                      style={{ width: `${passwordStrength}%` }}
-                    ></div>
-                  </div>
-                  <div className="flex justify-between text-xs text-gray-600 mt-1">
-                    <span>Strength: {getPasswordStrengthText()}</span>
-                    <span>{passwordStrength}%</span>
-                  </div>
-                </div>
-              )}
-              
-              {errors.password && (
-                <p className="mt-1 text-sm text-red-600">{errors.password}</p>
-              )}
-            </div>
-
-            {/* Confirm Password Field */}
-            <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-                Confirm Password
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                  <FaLock size={14} />
-                </div>
-                <input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type={showConfirmPassword ? "text" : "password"}
-                  placeholder="Confirm your password"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  className={`w-full pl-10 pr-10 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all ${
-                    errors.confirmPassword ? "border-red-500" : "border-gray-300"
-                  }`}
-                  required
-                />
-                <button
-                  type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-green-600 transition-colors"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                >
-                  {showConfirmPassword ? <FaEyeSlash size={14} /> : <FaEye size={14} />}
-                </button>
-              </div>
-              {errors.confirmPassword && (
-                <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
-              )}
-            </div>
-
-            {/* Terms Agreement */}
-            <label className="flex items-start text-sm text-gray-600 mt-4">
-              <input
-                type="checkbox"
-                required
-                className="rounded text-green-500 focus:ring-green-500 mt-1 mr-2"
-              />
-              <span>I agree to the <a href="/terms" className="text-green-600 hover:underline">Terms of Service</a> and <a href="/privacy" className="text-green-600 hover:underline">Privacy Policy</a></span>
+            {/* Terms */}
+            <label style={S.checkRow}>
+              <input type="checkbox" required style={{ accentColor: "#22c55e", marginTop: 2, flexShrink: 0 }} />
+              <span>I agree to the <a href="/terms" style={{ color: "#4ade80" }}>Terms of Service</a> and <a href="/privacy" style={{ color: "#4ade80" }}>Privacy Policy</a></span>
             </label>
 
-            {/* Register Button */}
-            <motion.button
-              type="submit"
-              disabled={loading}
-              whileHover={{ scale: loading ? 1 : 1.02 }}
-              whileTap={{ scale: loading ? 1 : 0.98 }}
-              className="w-full py-2.5 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed transition-colors shadow-md flex items-center justify-center gap-2 mt-4"
-            >
+            {/* Submit */}
+            <motion.button type="submit" disabled={loading}
+              whileHover={{ scale: loading ? 1 : 1.02 }} whileTap={{ scale: loading ? 1 : 0.98 }}
+              style={{ ...S.btn, opacity: loading ? 0.65 : 1, cursor: loading ? "not-allowed" : "pointer" }}>
               {loading ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>Creating Account...</span>
-                </>
+                <><div style={{ width: 15, height: 15, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", borderRadius: "50%", animation: "spin .7s linear infinite" }} /> Creating...</>
               ) : (
-                <>
-                  <FaCheck size={14} />
-                  <span>Create Account</span>
-                </>
+                <><FaCheck size={13} /> Create Account</>
               )}
             </motion.button>
           </form>
 
-          {/* Divider */}
-          <div className="relative flex items-center my-6">
-            <div className="flex-grow border-t border-gray-200"></div>
-            <span className="flex-shrink mx-4 text-gray-400 text-sm">or</span>
-            <div className="flex-grow border-t border-gray-200"></div>
-          </div>
+          <div style={S.divider}><div style={S.divLine} /><span style={S.divText}>or</span><div style={S.divLine} /></div>
 
-          {/* Login Link */}
-          <div className="text-center text-sm text-gray-600">
-            <p>
-              Already have an account?{" "}
-              <a href="/login" className="text-green-600 font-medium hover:underline">
-                Sign in
-              </a>
-            </p>
-          </div>
+          <p style={S.footer}>Already have an account? <a href="/login" style={{ color: "#4ade80", fontWeight: 500 }}>Sign in</a></p>
         </div>
       </motion.div>
+
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 };
