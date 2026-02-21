@@ -5,8 +5,9 @@ import { FaUtensils } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-const Navbar = () => {
+const Navbar = ({ onAIOpen }) => {
   const [isOpen, setIsOpen] = useState(false);
+
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -39,13 +40,16 @@ const Navbar = () => {
   return (
     <nav className="fixed top-0 left-0 w-full bg-white/90 backdrop-blur-md shadow-md z-50 h-16">
       <div className="max-w-7xl mx-auto px-4 h-full flex items-center justify-between">
+
         {/* Logo */}
         <Link
           to="/"
           className="flex items-center bg-white rounded-full p-2 shadow hover:scale-105 transition"
         >
           <FaUtensils className="text-3xl text-green-600 mr-2" />
-          <h1 className="text-lg md:text-xl font-bold text-gray-800">FoodShare</h1>
+          <h1 className="text-lg md:text-xl font-bold text-gray-800">
+            FoodShare
+          </h1>
         </Link>
 
         {/* Desktop Center Buttons */}
@@ -83,9 +87,12 @@ const Navbar = () => {
           )}
         </div>
 
-        {/* Right Side AI Button */}
+        {/* Desktop AI Button */}
         <div className="hidden md:flex ml-auto">
-          <button className="px-4 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition">
+          <button
+            onClick={onAIOpen}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition"
+          >
             🤖 AI
           </button>
         </div>
@@ -93,7 +100,11 @@ const Navbar = () => {
         {/* Mobile Menu Button */}
         <div className="md:hidden ml-auto">
           <button onClick={() => setIsOpen(!isOpen)}>
-            {isOpen ? <XMarkIcon className="w-6 h-6" /> : <Bars3Icon className="w-6 h-6" />}
+            {isOpen ? (
+              <XMarkIcon className="w-6 h-6" />
+            ) : (
+              <Bars3Icon className="w-6 h-6" />
+            )}
           </button>
         </div>
       </div>
@@ -142,7 +153,10 @@ const Navbar = () => {
 
               <button
                 className="px-4 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition"
-                onClick={() => setIsOpen(false)}
+                onClick={() => {
+                  onAIOpen();
+                  setIsOpen(false);
+                }}
               >
                 🤖 AI
               </button>
@@ -155,5 +169,3 @@ const Navbar = () => {
 };
 
 export default Navbar;
-
-
