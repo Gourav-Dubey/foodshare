@@ -8,7 +8,6 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(null);
 
   useEffect(() => {
-    // Restore session from localStorage if available
     const storedUser = localStorage.getItem("user");
     const storedRole = localStorage.getItem("role");
     const storedToken = localStorage.getItem("token");
@@ -21,11 +20,17 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = (userData, roleData, tokenData) => {
-    setUser(userData);
+    // ✅ _id bhi save karo taaki socket comparison kaam kare
+    const userToSave = {
+      ...userData,
+      _id: userData._id || userData.id,
+      id: userData._id || userData.id,
+    };
+    setUser(userToSave);
     setRole(roleData);
     setToken(tokenData);
 
-    localStorage.setItem("user", JSON.stringify(userData));
+    localStorage.setItem("user", JSON.stringify(userToSave));
     localStorage.setItem("role", roleData);
     localStorage.setItem("token", tokenData);
   };
@@ -34,7 +39,6 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     setRole(null);
     setToken(null);
-
     localStorage.removeItem("user");
     localStorage.removeItem("role");
     localStorage.removeItem("token");
@@ -48,5 +52,4 @@ export const AuthProvider = ({ children }) => {
 };
 
 export const useAuth = () => useContext(AuthContext);
-
 export { AuthContext };
